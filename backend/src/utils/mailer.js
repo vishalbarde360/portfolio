@@ -1,51 +1,34 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-
-    auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD,
-    },
-
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendOtpEmail = async (toEmail, otp) => {
-    console.log("SMTP: Sending OTP to:", toEmail);
+    console.log("RESEND: Sending OTP to:", toEmail);
 
-    try {
-        const info = await transporter.sendMail({
-            from: `"Vishal Barde Portfolio" <${process.env.SMTP_EMAIL}>`,
-            to: toEmail,
-            subject: "Your OTP for Email Verification",
-            html: `
-                <div style="font-family: Arial; max-width: 480px; margin: auto;">
-                    <h2>Verify your email</h2>
+    const { data, error } = await resend.emails.send({
+        from: "Portfolio <onboarding@resend.dev>",
+        to: [toEmail],
+        subject: "Your OTP for Email Verification",
 
-                    <p>Your OTP is:</p>
+        html: `
+            <h2>Email Verification</h2>
 
-                    <h1 style="letter-spacing: 8px;">
-                        ${otp}
-                    </h1>
+            <p>Your OTP is:</p>
 
-                    <p>This OTP is valid for 5 minutes.</p>
-                </div>
-            `,
-        });
+            <h1>${otp}</h1>
 
-        console.log("SMTP: Email sent:", info.messageId);
+            <p>This OTP is valid for 5 minutes.</p>
+        `
+    });
 
-        return info;
-
-    } catch (error) {
-        console.error("SMTP ERROR:", error);
-        throw error;
+    if (error) {
+        console.error("RESEND ERROR:", error);
+        throw new Error(error.message);
     }
+
+    console.log("RESEND EMAIL SENT:", data);
+
+    return data;
 };
 
 module.exports = { sendOtpEmail };
