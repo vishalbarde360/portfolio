@@ -30,12 +30,33 @@ const sendOtp = async (req, res) => {
             // Clear any previous unverified OTPs for this email
             await otpModel.deleteMany({ email });
         }
+        const otpRecord = await otpModel.create({
+            email,
+            otp,
+            expiresAt
+        });
 
-        const otp = generateOtp();
-        const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+        try {
+            await sendOtpEmail(email, otp);
 
-        await otpModel.create({ email, otp, expiresAt });
-        await sendOtpEmail(email, otp);
+            return res.status(200).json({
+                success: true,
+                message: "OTP sent to your email"
+            });
+
+        } catch (error) {
+
+            await otpModel.deleteOne({
+                _id: otpRecord._id
+            });
+
+            console.error("OTP EMAIL ERROR:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Failed to send OTP email"
+            });
+        }
 
         res.status(200).json({ success: true, message: "OTP sent to your email" });
     } catch (error) {
