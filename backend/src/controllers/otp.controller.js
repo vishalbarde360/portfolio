@@ -8,28 +8,43 @@ const RESEND_COOLDOWN_SECONDS = 45;
 const MAX_VERIFY_ATTEMPTS = 5;
 
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
-
 const sendOtp = async (req, res) => {
     try {
         const { email } = req.body;
 
         if (!email || !emailRegex.test(email)) {
-            return res.status(400).json({ success: false, message: "Valid email is required" });
+            return res.status(400).json({
+                success: false,
+                message: "Valid email is required"
+            });
         }
 
-        // Cooldown check: prevent spamming the resend button
-        const existing = await otpModel.findOne({ email }).sort({ createdAt: -1 });
+        const existing = await otpModel
+            .findOne({ email })
+            .sort({ createdAt: -1 });
+
         if (existing) {
-            const secondsSinceLastSend = (Date.now() - existing.createdAt.getTime()) / 1000;
+            const secondsSinceLastSend =
+                (Date.now() - existing.createdAt.getTime()) / 1000;
+
             if (secondsSinceLastSend < RESEND_COOLDOWN_SECONDS) {
                 return res.status(429).json({
                     success: false,
-                    message: `Please wait ${Math.ceil(RESEND_COOLDOWN_SECONDS - secondsSinceLastSend)}s before requesting another OTP`,
+                    message: `Please wait ${Math.ceil(
+                        RESEND_COOLDOWN_SECONDS - secondsSinceLastSend
+                    )}s before requesting another OTP`
                 });
             }
-            // Clear any previous unverified OTPs for this email
+
             await otpModel.deleteMany({ email });
         }
+
+        const otp = generateOtp();
+
+        const expiresAt = new Date(
+            Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000
+        );
+
         const otpRecord = await otpModel.create({
             email,
             otp,
@@ -44,13 +59,13 @@ const sendOtp = async (req, res) => {
                 message: "OTP sent to your email"
             });
 
-        } catch (error) {
+        } catch (emailError) {
 
             await otpModel.deleteOne({
                 _id: otpRecord._id
             });
 
-            console.error("OTP EMAIL ERROR:", error);
+            console.error("OTP EMAIL ERROR:", emailError);
 
             return res.status(500).json({
                 success: false,
@@ -58,9 +73,13 @@ const sendOtp = async (req, res) => {
             });
         }
 
-        res.status(200).json({ success: true, message: "OTP sent to your email" });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error("SEND OTP ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 
