@@ -10,9 +10,16 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors({
-    origin: "https://portfolio-blue-eta-76.vercel.app"
-}))
+const cors = require("cors");
+
+app.use(
+    cors({
+        origin: [
+            "https://portfolio-blue-eta-76.vercel.app",
+            "https://portfolio-01-seven-alpha.vercel.app",
+        ],
+    })
+);
 app.use(express.json());
 
 app.get("/", (req, res) => {
