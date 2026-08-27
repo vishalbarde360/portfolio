@@ -8,6 +8,7 @@ const cors = require("cors")
 
 dotenv.config();
 connectDB();
+const app = express();
 
 
 app.use(
