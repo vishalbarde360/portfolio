@@ -16,7 +16,7 @@ app.use(
         origin: [
             "https://portfolio-blue-eta-76.vercel.app",
             "https://portfolio-01-seven-alpha.vercel.app",
-            "https://vercel.com/vishal-markwebix/portfolio-dashboard"
+            "https://portfolio-dashboard-rose-rho.vercel.app"
         ],
     })
 );
