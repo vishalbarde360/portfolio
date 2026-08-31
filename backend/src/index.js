@@ -14,9 +14,10 @@ const app = express();
 app.use(
     cors({
         origin: [
-            "https://portfolio-blue-eta-76.vercel.app",
-            "https://portfolio-01-seven-alpha.vercel.app",
-            "https://portfolio-dashboard-rose-rho.vercel.app"
+            "https://vishalbarde.vercel.app",
+            "https://vishalbarde-portfolio.vercel.app",
+            "https://vishalbarde-dashboard.vercel.app"
+
         ],
     })
 );
